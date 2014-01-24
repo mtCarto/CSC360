@@ -5,6 +5,11 @@
 
 #define BUF_SIZE 256;
 
+typedef struct stdin_dict {
+  char** words;
+  int size;
+}stdin_dict;
+
 //linked list to hold input words
 struct node {
 	char *word;
@@ -81,15 +86,39 @@ struct node* search(char *data, struct node **prev) {
 	
 	
 //Read word list into an array words[] to use for dictionar
-struct node* ReadWords(struct node *dict,FILE *fp) {
-	
-	//struct node *head = NULL;
-//  char *line_in = malloc(sizeof(BUF_SIZE));
+stdin_dict* ReadWords(FILE *fp) {
+	stdin_dict *dict = calloc(1,sizeof(stdin_dict));
+  if (dict == NULL) {
+    printf("Error allocating for dict. \n");
+    exit(-1);
+  }
 
-	while (fgets(dict->word, BUF_SIZE, fp) != 1) {
-		insert(line_in);
-	}
-	
+  dict->size = 1;
+  dict->words = malloc(dict->size * sizeof(char*));
+  if (dict->words == NULL) {
+    printf("Error allocating for words. \n");
+    exit(-1);
+  }
+
+
+  int stdin_pos = 0;
+
+  for(;;) {
+    //check if there is room for a word
+    //allocate for space for word
+    dict->words[stdin_pos] = calloc(256,sizeof(char*));
+    //check if alloc worked
+
+    void* in_status = fgets(dict->words[stdin_pos],256 ,fp);
+    if (in_status == NULL) {
+      break;
+    } else {
+      if (dict->words[stdin_pos][strlen(dict->words[stdin_pos])-1] == '\n') {
+        dict->words[stdin_pos][strlen(dict->words[stdin_pos])-1] = 0;//strip newline off end of word
+      }
+    }
+    printf("%s", dict->words[stdin_pos]);
+  }	
 	return dict;
 }
 
@@ -126,20 +155,18 @@ int isPalin(char *ptest)
 		return 0;
 }
 
-int main (void) 
+int main (int argc,char *argv[]) 
 {
-  struct node *wordlist = NULL;
-  FILE *fp = fopen("/CSC360/fall360/palin","r");
+  printf("Welcome!\n");
+  FILE *fp = fopen("/CSC360/fall360/words","r");
   if (fp == NULL) {
     exit(EXIT_FAILURE);
   }
-	//char line_in[BUF_SIZE];
-	ReadWords(wordlist,fp);
+	ReadWords(fp);
 	
 	
-	
-
-	return(0);
+  exit(0);
+	return 0;
 }
 //Find max number of words, 
 //1st pass find all simple palins, store those that aren't simple
