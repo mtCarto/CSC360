@@ -4,63 +4,57 @@
 #include<string.h>
 
 #define BUF_SIZE 256;
-
-typedef struct stdin_dict {
-  char** words;
-  int size;
-}stdin_dict;
-
+#define TRUE 1
+#define FALSE 0
 //linked list to hold input words
-struct node {
+struct dict {
 	char *word;
-	struct node *next; 
+	struct dict *next; 
 }*head; 
 
-typedef struct node item;
-
-//add word from input to list
-
-void append(char *data) {
-	struct node *temp, *right;
-	temp = (struct node *)malloc(sizeof(struct node));	
-	temp->word = data;
-	right = (struct node *)head;
-	
-	while (right->next != NULL) {
-		right = right->next;
-		right->next = temp;
-		right=temp;
-		right->next=NULL;
-	}
-}
-	
-void add( char *data) {
-	struct node *temp;
-	temp = (struct node *)malloc(sizeof(struct node));
-	temp->word = data;
+struct dict *head = NULL;
+struct dict *curr = NULL;
+//typedef struct dict item;
+int isPalin(char *ptest);
+//add word from input to list, check if list is empty
+struct dict* add_toList(char *data) {
+  //if list is empty create new list
 	if (head == NULL){ 
-		head = temp;
-		head->next = NULL;
-	}
+		printf("Creating new list.\n");
+    struct dict *ptr = (struct dict*)malloc(sizeof(struct dict));
+    if (ptr == NULL) {
+      printf("error creating ptr\n");
+      return NULL;
+    }
+    ptr->word = data;
+    ptr->next = NULL;
+
+    head = curr = ptr;
+	  return ptr;
+  } 
+  //else add to end of list
 	else {
-		temp->next = head;
-		head = temp;
+    //printf("Adding to end of list.\n");
+    struct dict *ptr = (struct dict*)malloc(sizeof(struct dict));
+    if (ptr == NULL) {
+      printf("error creating ptr\n");
+      return NULL;
+    }
+    ptr->word = data;
+    ptr->next = NULL;
+
+    curr->next = ptr;
+    curr = ptr;
+
+    return ptr;
 	}
 }
 
-void insert(char *data) {
-	struct node *temp;
-	temp = head;
-	if (temp == NULL) {
-		add(data);
-	} else {
-		append(data);
-	}
-}
+
 //Find word in the list, return 1 (true) if a word is in the list
-struct node* search(char *data, struct node **prev) {
-	struct node *head = head;
-	struct node *temp = NULL;
+struct dict* search(char *data, struct dict **prev) {
+	struct dict *head = head;
+	struct dict *temp = NULL;
 	int found = 0;
 	while (head != NULL) {
 		if (head->word == data) {
@@ -86,40 +80,41 @@ struct node* search(char *data, struct node **prev) {
 	
 	
 //Read word list into an array words[] to use for dictionar
-stdin_dict* ReadWords(FILE *fp) {
-	stdin_dict *dict = calloc(1,sizeof(stdin_dict));
-  if (dict == NULL) {
-    printf("Error allocating for dict. \n");
-    exit(-1);
-  }
-
-  dict->size = 1;
-  dict->words = malloc(dict->size * sizeof(char*));
-  if (dict->words == NULL) {
-    printf("Error allocating for words. \n");
-    exit(-1);
-  }
-
-
-  int stdin_pos = 0;
-
+struct dict* ReadWords(FILE *fp) {
+    
+  //initialize dict list
+  struct dict *ptr = NULL;
   for(;;) {
-    //check if there is room for a word
-    //allocate for space for word
-    dict->words[stdin_pos] = calloc(256,sizeof(char*));
-    //check if alloc worked
-
-    void* in_status = fgets(dict->words[stdin_pos],256 ,fp);
-    if (in_status == NULL) {
+    //malloc less? check for size of input
+    //do check for room, if not double size
+    //char *wordIn = (char *)malloc(sizeof(256));
+    char *wordIn = calloc(256,sizeof(char*));
+    if (wordIn == NULL) {
+      printf("Error allocating wordIn \n");
+    }
+    void* in_Word = fgets(wordIn,256,fp);
+    if (in_Word == NULL) {
+      printf("Error reading word \n");
       break;
     } else {
-      if (dict->words[stdin_pos][strlen(dict->words[stdin_pos])-1] == '\n') {
-        dict->words[stdin_pos][strlen(dict->words[stdin_pos])-1] = 0;//strip newline off end of word
+      //ignore words with less than 3 characeters
+      if (strlen(wordIn) <= 4) {
+        continue;
+      }
+    //strip newline from input word
+      char *cptr;
+      if ((cptr = strchr(wordIn,'\n')) != NULL) {
+        *cptr = '\0';
+      }
+      if (isPalin(wordIn) == 0) {
+        printf("%s \n",wordIn);
+        //add_toList(wordIn);
       }
     }
-    printf("%s", dict->words[stdin_pos]);
-  }	
-	return dict;
+  //trouble here, doesn't like this free after awhile
+  free(wordIn);
+  }
+	return ptr;
 }
 
 //Reverse string
@@ -138,36 +133,54 @@ char *strrev(char *str) {
 }
 
 //palindrome test, ptest is the word to be tested
-int isPalin(char *ptest)
-{
-	//temp variable b to hold reversed string
-	char *b = malloc(sizeof(ptest));
-	//copy and reverse the word
-	strcpy(b,ptest);
-	strrev(b);
-
-	//Test for simple palindrome
-	if ( strcmp(ptest,b)== 0){ 
-		free(b);
-		return 1;
-	}
-	else
-		return 0;
+int isPalin(char *ptest) {
+  //char *tempstr;
+  //get malloc working properly, possible error here or in alloc in ReadWords
+  char *tempstr = (char *)malloc(strlen(ptest) * sizeof(128));
+  strcpy(tempstr,ptest);
+  strrev(tempstr);
+ // printf("%s \n", ptest);
+ // printf("%s \n", tempstr);
+  if (strcmp(tempstr,ptest) == 0) {
+    strrev(ptest);
+    free(tempstr);
+    return 0;
+  }
+  else {
+    free(tempstr);
+	  return 1;
+  }
 }
 
+void printList(void) {
+ // your looking at an empty struct, everything is in stdin_dict *dict........
+ // struct node *ptr = head;
+  
+  printf("\n ------List Start------ \n");
+  
+  printf("\n -----List End------- \n");
+  return;
+}
+
+
 int main (int argc,char *argv[]) 
-{
+{ 
   printf("Welcome!\n");
-  FILE *fp = fopen("/CSC360/fall360/words","r");
+  FILE *fp = fopen("/home/mcthomps/CSC360/s360/words","r");
   if (fp == NULL) {
+    printf("file failed to open\n");
     exit(EXIT_FAILURE);
   }
-	ReadWords(fp);
-	
-	
+  
+   ReadWords(fp);
+ // printList(dict);
+//check if word is a simple palindrome
+//  yes: add to output list
+//if not check if it's reverse is in the list
+//  yes: insert into output list
+//else continue
+  fclose(fp);
   exit(0);
 	return 0;
 }
-//Find max number of words, 
-//1st pass find all simple palins, store those that aren't simple
 //for each non-simple palin, do strrev and strcmp, if word is found in list return both words
